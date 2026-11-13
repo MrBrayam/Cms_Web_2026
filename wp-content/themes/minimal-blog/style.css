@@ -1,0 +1,373 @@
+/*
+Theme Name: Minimal Blog
+Theme URI: http://blogcms.localhost/
+Author: Grupo 1 - UNSM Ingenieria Web
+Description: Tema minimalista, limpio y tipografico disenado para lectura editorial en BlogCMS.
+Version: 1.0.0
+Update URI: false
+Requires at least: 6.0
+Tested up to: 7.2
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+Text Domain: minimal-blog
+Tags: blog, one-column, clean, typography, minimal
+*/
+
+:root {
+    --mb-bg: #faf9f6;
+    --mb-surface: #ffffff;
+    --mb-text: #1c1917;
+    --mb-muted: #78716c;
+    --mb-border: #e7e5e4;
+    --mb-accent: #0f766e;
+    --mb-accent-hover: #115e59;
+    --mb-serif: Georgia, "Times New Roman", serif;
+    --mb-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mb-max: 760px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--mb-bg);
+    color: var(--mb-text);
+    font-family: var(--mb-sans);
+    font-size: 17px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: var(--mb-accent);
+    text-decoration: none;
+    transition: color 0.18s ease;
+}
+
+a:hover {
+    color: var(--mb-accent-hover);
+    text-decoration: underline;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.mb-container {
+    max-width: var(--mb-max);
+    margin: 0 auto;
+    padding: 0 1.25rem;
+}
+
+/* Header */
+.mb-header {
+    border-bottom: 1px solid var(--mb-border);
+    background: var(--mb-surface);
+    padding: 1.5rem 0;
+}
+
+.mb-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.mb-brand {
+    font-family: var(--mb-serif);
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--mb-text);
+    letter-spacing: -0.02em;
+}
+
+.mb-brand:hover {
+    text-decoration: none;
+    color: var(--mb-accent);
+}
+
+.mb-tagline {
+    margin: 0.15rem 0 0;
+    font-size: 0.85rem;
+    color: var(--mb-muted);
+}
+
+.mb-nav-toggle {
+    display: none;
+    background: none;
+    border: 1px solid var(--mb-border);
+    padding: 0.4rem 0.7rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.mb-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.mb-nav a {
+    color: var(--mb-text);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.mb-nav a:hover,
+.mb-nav .current-menu-item > a {
+    color: var(--mb-accent);
+    text-decoration: none;
+}
+
+/* Main */
+.mb-main {
+    padding: 3rem 0 4rem;
+}
+
+.mb-archive-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--mb-border);
+}
+
+.mb-archive-header h1 {
+    font-family: var(--mb-serif);
+    font-size: 2rem;
+    margin: 0 0 0.4rem;
+}
+
+/* Article Card */
+.mb-post {
+    margin-bottom: 3rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--mb-border);
+}
+
+.mb-post:last-of-type {
+    border-bottom: none;
+}
+
+.mb-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--mb-muted);
+    margin-bottom: 0.65rem;
+}
+
+.mb-cat-badge {
+    background: #ecfdf5;
+    color: var(--mb-accent);
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.78rem;
+}
+
+.mb-post-title {
+    font-family: var(--mb-serif);
+    font-size: 1.9rem;
+    line-height: 1.25;
+    margin: 0 0 0.85rem;
+    letter-spacing: -0.015em;
+}
+
+.mb-post-title a {
+    color: var(--mb-text);
+}
+
+.mb-post-title a:hover {
+    color: var(--mb-accent);
+    text-decoration: none;
+}
+
+.mb-featured-img {
+    margin: 1.25rem 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--mb-border);
+}
+
+.mb-excerpt {
+    color: #44403c;
+}
+
+.mb-read-more {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+/* Single Post & Page */
+.mb-single-title {
+    font-family: var(--mb-serif);
+    font-size: 2.35rem;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+    letter-spacing: -0.02em;
+}
+
+.mb-content {
+    margin-top: 1.5rem;
+}
+
+.mb-content h2, .mb-content h3 {
+    font-family: var(--mb-serif);
+    margin-top: 2rem;
+    line-height: 1.3;
+}
+
+.mb-content blockquote {
+    margin: 1.5rem 0;
+    padding: 0.5rem 1.25rem;
+    border-left: 3px solid var(--mb-accent);
+    color: var(--mb-muted);
+    font-style: italic;
+}
+
+.mb-tags {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--mb-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.mb-tags a {
+    background: var(--mb-surface);
+    border: 1px solid var(--mb-border);
+    padding: 0.2rem 0.65rem;
+    border-radius: 4px;
+    color: var(--mb-muted);
+}
+
+.mb-tags a:hover {
+    border-color: var(--mb-accent);
+    color: var(--mb-accent);
+    text-decoration: none;
+}
+
+/* Comments */
+.mb-comments {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--mb-border);
+}
+
+.comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.comment-body {
+    background: var(--mb-surface);
+    border: 1px solid var(--mb-border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.comment-meta {
+    font-size: 0.85rem;
+    color: var(--mb-muted);
+    margin-bottom: 0.5rem;
+}
+
+.comment-form label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.comment-form input[type="text"],
+.comment-form input[type="email"],
+.comment-form input[type="url"],
+.comment-form textarea {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    background: var(--mb-surface);
+}
+
+.comment-form input[type="submit"],
+.mb-btn {
+    background: var(--mb-accent);
+    color: #ffffff;
+    border: none;
+    padding: 0.65rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.comment-form input[type="submit"]:hover,
+.mb-btn:hover {
+    background: var(--mb-accent-hover);
+}
+
+/* Pagination */
+.mb-pagination {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    font-weight: 600;
+}
+
+/* Footer */
+.mb-footer {
+    border-top: 1px solid var(--mb-border);
+    background: var(--mb-surface);
+    padding: 2rem 0;
+    font-size: 0.88rem;
+    color: var(--mb-muted);
+}
+
+.mb-footer-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .mb-nav-toggle {
+        display: inline-block;
+    }
+    .mb-nav {
+        display: none;
+        width: 100%;
+    }
+    .mb-nav.is-open {
+        display: block;
+    }
+    .mb-nav ul {
+        flex-direction: column;
+        gap: 0.65rem;
+        padding-top: 0.75rem;
+    }
+    .mb-single-title {
+        font-size: 1.85rem;
+    }
+}

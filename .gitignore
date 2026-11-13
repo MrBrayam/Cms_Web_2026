@@ -1,0 +1,11 @@
+# Credenciales locales y archivos de entorno
+wp-config.php
+.htaccess
+
+# Logs y archivos temporales
+*.log
+wp-content/debug.log
+wp-content/cache/
+
+# Evitar duplicar zips de plugins ya extraidos en wp-content/plugins/
+entregables-zip/plugins/

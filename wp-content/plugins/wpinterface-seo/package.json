@@ -1,0 +1,33 @@
+{
+	"name": "wpinterface-seo",
+	"version": "1.0.2",
+	"private": true,
+	"description": "WPInterface SEO WordPress plugin.",
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"lint:js": "wp-scripts lint-js assets/src",
+		"lint:css": "wp-scripts lint-style \"assets/src/**/*.scss\"",
+		"format": "wp-scripts format assets/src",
+		"env": "wp-env",
+		"test:php": "wp-env run tests-cli --env-cwd=wp-content/plugins/wpinterface-seo vendor/bin/phpunit",
+		"i18n:pot": "wp i18n make-pot . languages/wpinterface-seo.pot --exclude=node_modules,vendor,assets/build,tests",
+		"plugin-zip": "wp-scripts plugin-zip"
+	},
+	"files": [
+		"assets/build",
+		"blocks",
+		"languages",
+		"src",
+		"readme.txt",
+		"uninstall.php",
+		"wpinterface-seo.php"
+	],
+	"devDependencies": {
+		"@wordpress/env": "^10.0.0",
+		"@wordpress/i18n": "^6.30.0",
+		"@wordpress/scripts": "^30.0.0",
+		"typescript": "^5.9.3"
+	}
+}

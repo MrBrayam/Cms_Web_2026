@@ -1,0 +1,21 @@
+// Template field with variable inserter (editor and settings screens).
+
+.wpiseo-variable-field {
+	display: flex;
+	align-items: flex-start;
+	gap: 4px;
+
+	&__input {
+		flex: 1;
+		min-width: 0;
+
+		&.is-multiline {
+			min-height: 72px;
+			resize: vertical;
+		}
+	}
+}
+
+.wpiseo-variable-menu .components-menu-item__info {
+	font-family: monospace;
+}
