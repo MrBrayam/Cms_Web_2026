@@ -26,8 +26,27 @@ Proyecto **BlogCMS – Grupo 1 (Tipo: WordPress)** para el curso **Ingeniería W
 
 > Los paquetes `.zip` de los 4 temas se encuentran en `entregables-zip/temas/` para demostrar la subida e instalación automática mediante `ZipArchive` desde *Apariencia → Temas → Subir tema*.
 
-## Puesta en Marcha Local
-1. Clonar el repositorio y apuntar el servidor web (Apache/PHP 8.2+ con extensiones `mysqli`, `zip`, `gd` e `intl` activas) a la raíz del proyecto.
-2. Importar el respaldo de base de datos [`database/blogcms_wp.sql`](database/blogcms_wp.sql) en MySQL/MariaDB.
-3. Copiar `wp-config-sample.php` a `wp-config.php`, configurar `DB_NAME` (`blogcms_wp`), `DB_USER`, `DB_PASSWORD`, `DB_HOST` y añadir `define( 'FS_METHOD', 'direct' );`.
-4. Si usas un dominio local distinto a `http://blogcms.localhost`, actualiza `siteurl` y `home` en la tabla `wp_options`.
+## Puesta en Marcha Local (Con Instalador Ejecutable o Web)
+
+### Qué necesita la otra persona en su PC
+1. **Windows 10/11** (ya incluye `.NET Framework 4.x`, no requiere instalar nada extra para el `.exe`).
+2. **XAMPP** instalado en `C:\xampp` (para Apache y PHP).
+3. **Un motor de Base de Datos** (el instalador los detecta automáticamente):
+   - **MySQL / MariaDB de XAMPP**, o
+   - **MySQL Server local** (`3306`), o
+   - **PostgreSQL** (`5432`).
+
+### Opción A: Instalación en 1 clic con el Ejecutable (`Instalador_BlogCMS.exe`)
+1. Clonar o descargar el repositorio en cualquier carpeta:
+   ```bash
+   git clone https://github.com/MrBrayam/Cms_Web_2026.git
+   ```
+2. Ejecutar **[`Instalador_BlogCMS.exe`](Instalador_BlogCMS.exe)** con doble clic.
+3. En la ventana del instalador:
+   - Elegir el **motor de base de datos** detectado (MySQL Local, MySQL de XAMPP o PostgreSQL) e ingresar la contraseña (en XAMPP por defecto va vacía).
+   - Elegir el **tema inicial** (`magazine`, `business`, `portfolio` o `minimal-blog`) y hacer clic en **"Instalar BlogCMS Ahora"**.
+   - El ejecutable habilita automáticamente `zip`, `gd` e `intl` en `C:\xampp\php\php.ini`, registra el VirtualHost `http://blogcms.localhost` en Apache apuntando a la carpeta clonada, inicia Apache, crea la base de datos `blogcms_wp`, importa [`database/blogcms_wp.sql`](database/blogcms_wp.sql) y genera `wp-config.php` + `.htaccess`.
+4. Hacer clic en **"Abrir Web"** o **"Admin"** desde el propio ejecutable.
+
+### Opción B: Asistente Web (`instalador.php`)
+- Si prefieres hacerlo desde el navegador, abre `http://blogcms.localhost/instalador.php` (o `http://localhost/<carpeta>/instalador.php`) y sigue los 3 pasos visuales.

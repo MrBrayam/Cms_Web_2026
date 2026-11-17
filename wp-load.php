@@ -72,6 +72,11 @@ if ( file_exists( ABSPATH . 'wp-config.php' ) ) {
 	define( 'WP_CONTENT_DIR', ABSPATH . 'wp-content' );
 	require_once ABSPATH . WPINC . '/functions.php';
 
+	if ( file_exists( ABSPATH . 'instalador.php' ) && ! str_contains( $_SERVER['REQUEST_URI'], 'instalador.php' ) ) {
+		header( 'Location: ' . wp_guess_url() . '/instalador.php' );
+		exit;
+	}
+
 	$path = wp_guess_url() . '/wp-admin/setup-config.php';
 
 	// Redirect to setup-config.php.
