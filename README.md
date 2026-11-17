@@ -62,4 +62,4 @@ Proyecto **BlogCMS – Grupo 1 (Tipo: WordPress)** para el curso **Ingeniería W
    ```
 
 ### Opción C: Asistente Web Multiplataforma (`instalador.php`)
-- Funciona igual en **Windows y Kubuntu/Linux**: abre `http://blogcms.localhost/instalador.php` (o `http://localhost:8080/instalador.php`) y sigue los 3 pasos visuales.
+- Funciona igual en **Windows y Kubuntu/Linux**: abre `http://blogcms.localhost/instalador.php` (o `http://localhost:8080/instalador.php`) y sigue los 3 pasos visuales. 7
