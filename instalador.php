@@ -39,11 +39,13 @@ function blogcms_is_port_open( string $host, int $port, float $timeout = 0.3 ): 
  */
 function blogcms_detect_db_engines(): array {
 	$xampp_port = 3307;
-	$my_ini     = 'C:/xampp/mysql/bin/my.ini';
-	if ( is_readable( $my_ini ) ) {
-		$ini_raw = file_get_contents( $my_ini );
-		if ( preg_match( '/^\s*port\s*=\s*(\d+)/m', $ini_raw, $m ) ) {
-			$xampp_port = (int) $m[1];
+	foreach ( [ 'C:/xampp/mysql/bin/my.ini', '/opt/lampp/etc/my.cnf' ] as $ini_candidate ) {
+		if ( is_readable( $ini_candidate ) ) {
+			$ini_raw = file_get_contents( $ini_candidate );
+			if ( preg_match( '/^\s*port\s*=\s*(\d+)/m', $ini_raw, $m ) ) {
+				$xampp_port = (int) $m[1];
+				break;
+			}
 		}
 	}
 
@@ -350,6 +352,10 @@ if ( ( $_SERVER['REQUEST_METHOD'] ?? 'GET' ) === 'POST' && isset( $_POST['run_in
 						$stmt->execute();
 					}
 					$stmt->close();
+					if ( $site_url !== 'http://blogcms.localhost' ) {
+						$u_url = $mysqli->real_escape_string( $site_url );
+						$mysqli->query( "UPDATE wp_posts SET post_content = REPLACE(post_content, 'http://blogcms.localhost', '$u_url'), guid = REPLACE(guid, 'http://blogcms.localhost', '$u_url')" );
+					}
 					$install_log[] = "Configuracion actualizada: URL ($site_url), titulo ('$site_title') y tema activo ('$theme_slug').";
 				}
 

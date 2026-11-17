@@ -48,5 +48,18 @@ Proyecto **BlogCMS – Grupo 1 (Tipo: WordPress)** para el curso **Ingeniería W
    - El ejecutable habilita automáticamente `zip`, `gd` e `intl` en `C:\xampp\php\php.ini`, registra el VirtualHost `http://blogcms.localhost` en Apache apuntando a la carpeta clonada, inicia Apache, crea la base de datos `blogcms_wp`, importa [`database/blogcms_wp.sql`](database/blogcms_wp.sql) y genera `wp-config.php` + `.htaccess`.
 4. Hacer clic en **"Abrir Web"** o **"Admin"** desde el propio ejecutable.
 
-### Opción B: Asistente Web (`instalador.php`)
-- Si prefieres hacerlo desde el navegador, abre `http://blogcms.localhost/instalador.php` (o `http://localhost/<carpeta>/instalador.php`) y sigue los 3 pasos visuales.
+### Opción B: Instalación en Linux / Kubuntu (`instalador_linux.sh`)
+1. Si aún no tienes PHP/MySQL o XAMPP (`/opt/lampp`) en Kubuntu:
+   ```bash
+   sudo apt update && sudo apt install -y php php-mysql php-zip php-gd php-intl php-curl php-mbstring php-xml mariadb-server
+   ```
+2. Clonar el repositorio y ejecutar el instalador para Linux/Kubuntu (usa ventana gráfica `kdialog` de KDE Plasma o terminal interactiva, y detecta automáticamente MySQL/MariaDB local `3306`, XAMPP `/opt/lampp` y PostgreSQL `5432`):
+   ```bash
+   git clone https://github.com/MrBrayam/Cms_Web_2026.git
+   cd Cms_Web_2026
+   chmod +x instalador_linux.sh
+   ./instalador_linux.sh
+   ```
+
+### Opción C: Asistente Web Multiplataforma (`instalador.php`)
+- Funciona igual en **Windows y Kubuntu/Linux**: abre `http://blogcms.localhost/instalador.php` (o `http://localhost:8080/instalador.php`) y sigue los 3 pasos visuales.
