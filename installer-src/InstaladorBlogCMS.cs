@@ -61,6 +61,8 @@ namespace BlogCMSInstaller
         private ProgressBar progressBar;
         private TextBox txtLog;
         private Button btnInstall;
+        private Button btnReinstall;
+        private Button btnUninstall;
         private Button btnOpenSite;
         private Button btnOpenAdmin;
 
@@ -185,18 +187,24 @@ namespace BlogCMSInstaller
                 Location = new Point(18, 510),
                 Size = new Size(828, 196)
             };
-            progressBar = new ProgressBar { Location = new Point(16, 26), Size = new Size(465, 22), Minimum = 0, Maximum = 100 };
-            btnInstall = new Button { Text = "Instalar BlogCMS Ahora", Font = new Font("Segoe UI", 9.5F, FontStyle.Bold), BackColor = Color.FromArgb(5, 150, 105), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(494, 20), Size = new Size(165, 34) };
+            progressBar = new ProgressBar { Location = new Point(16, 26), Size = new Size(255, 22), Minimum = 0, Maximum = 100 };
+            btnInstall = new Button { Text = "Instalar", Font = new Font("Segoe UI", 9F, FontStyle.Bold), BackColor = Color.FromArgb(5, 150, 105), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(282, 20), Size = new Size(105, 34) };
             btnInstall.Click += OnInstallClicked;
 
-            btnOpenSite = new Button { Text = "Abrir Web", Font = new Font("Segoe UI", 8.8F, FontStyle.Bold), BackColor = Color.FromArgb(2, 132, 199), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(666, 20), Size = new Size(72, 34) };
+            btnReinstall = new Button { Text = "Reinstalar", Font = new Font("Segoe UI", 9F, FontStyle.Bold), BackColor = Color.FromArgb(217, 119, 6), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(392, 20), Size = new Size(105, 34) };
+            btnReinstall.Click += OnReinstallClicked;
+
+            btnUninstall = new Button { Text = "Desinstalar", Font = new Font("Segoe UI", 9F, FontStyle.Bold), BackColor = Color.FromArgb(220, 38, 38), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(502, 20), Size = new Size(110, 34) };
+            btnUninstall.Click += OnUninstallClicked;
+
+            btnOpenSite = new Button { Text = "Web", Font = new Font("Segoe UI", 8.8F, FontStyle.Bold), BackColor = Color.FromArgb(2, 132, 199), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(622, 20), Size = new Size(90, 34) };
             btnOpenSite.Click += (s, e) => Process.Start(txtSiteUrl.Text.Trim());
 
-            btnOpenAdmin = new Button { Text = "Admin", Font = new Font("Segoe UI", 8.8F, FontStyle.Bold), BackColor = Color.FromArgb(11, 59, 96), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(742, 20), Size = new Size(68, 34) };
+            btnOpenAdmin = new Button { Text = "Admin", Font = new Font("Segoe UI", 8.8F, FontStyle.Bold), BackColor = Color.FromArgb(11, 59, 96), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Location = new Point(718, 20), Size = new Size(92, 34) };
             btnOpenAdmin.Click += (s, e) => Process.Start(txtSiteUrl.Text.Trim().TrimEnd('/') + "/admin");
 
             txtLog = new TextBox { Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, BackColor = Color.FromArgb(15, 23, 42), ForeColor = Color.FromArgb(226, 232, 240), Font = new Font("Consolas", 9F), Location = new Point(16, 60), Size = new Size(794, 122) };
-            grpRun.Controls.AddRange(new Control[] { progressBar, btnInstall, btnOpenSite, btnOpenAdmin, txtLog });
+            grpRun.Controls.AddRange(new Control[] { progressBar, btnInstall, btnReinstall, btnUninstall, btnOpenSite, btnOpenAdmin, txtLog });
             Controls.Add(grpRun);
         }
 
@@ -463,7 +471,12 @@ try {
 
     $cfg = ""<?php\nreturn [\n    'db_driver'  => '$driver',\n    'db_host'    => '$host',\n    'db_port'    => $port,\n    'db_name'    => '$db',\n    'db_user'    => '$user',\n    'db_pass'    => '"" . addcslashes($pass, ""\\'"") . ""',\n    'app_url'    => '$url',\n    'app_secret' => '"" . bin2hex(random_bytes(32)) . ""',\n    'debug'      => false,\n];\n"";
     file_put_contents($root . '/config/config.php', $cfg);
-    echo ""config/config.php generado correctamente.\nSUCCESS_OK\n"";
+    if (class_exists('ZipArchive')) {
+        foreach ([[$root . '/packages/plugins/*.zip', $root . '/plugins'], [$root . '/packages/themes/*.zip', $root . '/themes']] as [$g, $d]) {
+            foreach (glob($g) ?: [] as $zf) { $z = new ZipArchive(); if ($z->open($zf) === true) { $z->extractTo($d); $z->close(); } }
+        }
+    }
+    echo ""config/config.php generado y paquetes restaurados.\nSUCCESS_OK\n"";
 } catch (Throwable $ex) {
     echo 'FATAL: ' . $ex->getMessage();
 }";
@@ -475,10 +488,97 @@ try {
                 {
                     progressBar.Value = res.Contains("SUCCESS_OK") ? 100 : 0;
                     btnInstall.Enabled = true;
+                    btnReinstall.Enabled = true;
+                    btnUninstall.Enabled = true;
                     ScanEnvironment();
                     MessageBox.Show(res.Contains("SUCCESS_OK") ? "BlogCMS instalado correctamente.\nURL: " + siteUrl : res,
                         "Resultado Instalacion", MessageBoxButtons.OK,
                         res.Contains("SUCCESS_OK") ? MessageBoxIcon.Information : MessageBoxIcon.Error);
+                }));
+            });
+        }
+
+        private void OnReinstallClicked(object sender, EventArgs e)
+        {
+            var confirm = MessageBox.Show(
+                "Esto reinicializará todas las tablas desde cero, restaurará los 6 plugins y 4 temas desde packages/ y regenerará config/config.php y .htaccess.\n\n¿Deseas reinstalar BlogCMS ahora?",
+                "Confirmar Reinstalación",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+            if (confirm != DialogResult.Yes) return;
+
+            cmbDbMode.SelectedIndex = 0; // Forzar re-importación completa del esquema SQL
+            OnInstallClicked(sender, e);
+        }
+
+        private async void OnUninstallClicked(object sender, EventArgs e)
+        {
+            var confirm = MessageBox.Show(
+                "¿Estás seguro de desinstalar BlogCMS?\n\nSe eliminarán las tablas del CMS en la base de datos, config/config.php y .htaccess.",
+                "Confirmar Desinstalación",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+            if (confirm != DialogResult.Yes) return;
+
+            var dropDbAsk = MessageBox.Show(
+                "¿Deseas eliminar también la base de datos completa ('" + txtDbName.Text.Trim() + "')?\n\n- Sí: ejecuta DROP DATABASE\n- No: solo borra las tablas del CMS",
+                "Eliminar Base de Datos",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+            string dropDbFlag = (dropDbAsk == DialogResult.Yes) ? "1" : "0";
+
+            var sel = cmbEngines.SelectedItem as DbEngineOption;
+            string driver = sel != null ? sel.Driver : "mysql";
+            string host = txtHost.Text.Trim();
+            string port = txtPort.Text.Trim();
+            string user = txtUser.Text.Trim();
+            string pass = txtPass.Text;
+            string dbName = Regex.Replace(txtDbName.Text.Trim(), @"[^a-zA-Z0-9_]", "");
+
+            btnInstall.Enabled = false;
+            btnReinstall.Enabled = false;
+            btnUninstall.Enabled = false;
+            progressBar.Value = 25;
+            Log("=== DESINSTALANDO BLOGCMS ===");
+
+            await Task.Run(() =>
+            {
+                string phpUninstall = @"<?php
+[$driver, $host, $port, $user, $pass, $db, $dropDb, $root] = array_slice($argv, 1);
+$port = (int)$port;
+try {
+    if ($dropDb === '1' && $db !== '') {
+        $dsn = ($driver === 'pgsql') ? ""pgsql:host=$host;port=$port;dbname=postgres"" : ""mysql:host=$host;port=$port;charset=utf8mb4"";
+        $p = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        if ($driver === 'pgsql') { $p->exec('DROP DATABASE IF EXISTS ""' . $db . '"" WITH (FORCE)'); }
+        else { $p->exec(""DROP DATABASE IF EXISTS `$db`""); }
+        echo ""Base de datos '$db' eliminada.\n"";
+    } elseif ($db !== '') {
+        $dsn = ($driver === 'pgsql') ? ""pgsql:host=$host;port=$port;dbname=$db"" : ""mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4"";
+        $p = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $tables = ['audit_logs','visit_logs','contact_messages','gallery_images','gallery_albums','media','themes','plugins','menus','comments','pages','post_tags','posts','tags','categories','users','options'];
+        if ($driver === 'mysql') $p->exec('SET FOREIGN_KEY_CHECKS = 0');
+        foreach ($tables as $t) $p->exec($driver === 'pgsql' ? ""DROP TABLE IF EXISTS \""$t\"" CASCADE"" : ""DROP TABLE IF EXISTS `$t`"");
+        if ($driver === 'mysql') $p->exec('SET FOREIGN_KEY_CHECKS = 1');
+        echo ""Todas las tablas del CMS fueron eliminadas de '$db'.\n"";
+    }
+    if (is_file($root . '/config/config.php')) { unlink($root . '/config/config.php'); echo ""config/config.php eliminado.\n""; }
+    if (is_file($root . '/.htaccess')) { unlink($root . '/.htaccess'); echo "".htaccess eliminado.\n""; }
+    echo ""UNINSTALL_OK\n"";
+} catch (Throwable $ex) {
+    echo 'ERROR: ' . $ex->getMessage();
+}";
+                string res = RunPhpFile(phpUninstall, new[] { driver, host, port, user, pass, dbName, dropDbFlag, projectRoot.Replace("\\", "/") });
+                Log(res);
+                Invoke(new Action(() =>
+                {
+                    progressBar.Value = res.Contains("UNINSTALL_OK") ? 100 : 0;
+                    btnInstall.Enabled = true;
+                    btnReinstall.Enabled = true;
+                    btnUninstall.Enabled = true;
+                    MessageBox.Show(res.Contains("UNINSTALL_OK") ? "BlogCMS ha sido desinstalado limpiamente." : res,
+                        "Desinstalación", MessageBoxButtons.OK,
+                        res.Contains("UNINSTALL_OK") ? MessageBoxIcon.Information : MessageBoxIcon.Error);
                 }));
             });
         }
@@ -525,7 +625,7 @@ try {
 
         private void WriteHtaccess()
         {
-            string rules = "Options -Indexes\r\nRedirectMatch 403 ^/(config|core|database|installer-src)(/.*)?$\r\n\r\n<IfModule mod_rewrite.c>\r\n    RewriteEngine On\r\n    RewriteBase /\r\n    RewriteCond %{REQUEST_FILENAME} !-f\r\n    RewriteCond %{REQUEST_FILENAME} !-d\r\n    RewriteRule ^ index.php [L]\r\n</IfModule>\r\n";
+            string rules = "Options -Indexes\r\nRedirectMatch 403 ^/(config|core|database|installer-src)(/.*)?$\r\nRedirectMatch 403 ^/admin/.+\\.php$\r\n\r\n<IfModule mod_rewrite.c>\r\n    RewriteEngine On\r\n    RewriteBase /\r\n    RewriteRule ^admin/?$ index.php [L]\r\n    RewriteCond %{REQUEST_FILENAME} !-f\r\n    RewriteCond %{REQUEST_FILENAME} !-d\r\n    RewriteRule ^ index.php [L]\r\n</IfModule>\r\n";
             File.WriteAllText(Path.Combine(projectRoot, ".htaccess"), rules, new UTF8Encoding(false));
         }
 

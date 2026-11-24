@@ -190,7 +190,129 @@ $engines    = blogcms_detect_db_engines();
 $baseUrl    = blogcms_detect_base_url();
 $hasConfig  = is_file(BLOGCMS_CONFIG_FILE);
 $errorMsg   = '';
+$successMsg = '';
 $installLog = [];
+
+function blogcms_restore_packages(): int
+{
+    $restored = 0;
+    if (!class_exists('ZipArchive')) {
+        return 0;
+    }
+    $sets = [
+        [BLOGCMS_ROOT . '/packages/plugins/*.zip', BLOGCMS_ROOT . '/plugins'],
+        [BLOGCMS_ROOT . '/packages/themes/*.zip', BLOGCMS_ROOT . '/themes'],
+    ];
+    foreach ($sets as [$glob, $dest]) {
+        foreach (glob($glob) ?: [] as $zipPath) {
+            $z = new ZipArchive();
+            if ($z->open($zipPath) === true) {
+                $z->extractTo($dest);
+                $z->close();
+                $restored++;
+            }
+        }
+    }
+    return $restored;
+}
+
+function blogcms_write_htaccess_file(): void
+{
+    $htRules = "Options -Indexes\nRedirectMatch 403 ^/(config|core|database|installer-src)(/.*)?\$\nRedirectMatch 403 ^/admin/.+\\.php\$\n\n<IfModule mod_rewrite.c>\n    RewriteEngine On\n    RewriteBase /\n    RewriteRule ^admin/?\$ index.php [L]\n    RewriteCond %{REQUEST_FILENAME} !-f\n    RewriteCond %{REQUEST_FILENAME} !-d\n    RewriteRule ^ index.php [L]\n</IfModule>\n";
+    @file_put_contents(BLOGCMS_ROOT . '/.htaccess', $htRules);
+}
+
+// Accion: Reinstalar CMS desde cero usando la configuracion actual
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action_reinstall']) && $hasConfig) {
+    try {
+        $cfg    = require BLOGCMS_CONFIG_FILE;
+        $driver = $cfg['db_driver'] ?? 'mysql';
+        $host   = $cfg['db_host'] ?? '127.0.0.1';
+        $port   = (int) ($cfg['db_port'] ?? ($driver === 'pgsql' ? 5432 : 3306));
+        $dbName = $cfg['db_name'] ?? 'blogcms_wp';
+        $user   = $cfg['db_user'] ?? 'root';
+        $pass   = $cfg['db_pass'] ?? '';
+        $appUrl = $cfg['app_url'] ?? $baseUrl;
+
+        $dsn = $driver === 'pgsql'
+            ? "pgsql:host=$host;port=$port;dbname=$dbName"
+            : "mysql:host=$host;port=$port;dbname=$dbName;charset=utf8mb4";
+        $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+
+        $sqlFile = ($driver === 'pgsql') ? BLOGCMS_SQL_PGSQL : BLOGCMS_SQL_MYSQL;
+        foreach (blogcms_split_sql((string) file_get_contents($sqlFile)) as $st) {
+            $pdo->exec($st);
+        }
+        $pdo->prepare('UPDATE options SET option_value = ? WHERE option_name = ?')->execute([$appUrl, 'site_url']);
+
+        $restoredCount = blogcms_restore_packages();
+        blogcms_write_htaccess_file();
+
+        $installLog[] = "Base de datos '$dbName' ($driver) reinicializada desde cero con " . basename($sqlFile) . '.';
+        $installLog[] = "Componentes restaurados desde packages/ ($restoredCount paquetes de plugins y temas).";
+        $installLog[] = 'Archivo .htaccess regenerado correctamente.';
+        $siteUrl      = $appUrl;
+        $adminUser    = 'admin';
+        $step         = 4;
+    } catch (Throwable $e) {
+        $errorMsg = 'Error al reinstalar: ' . $e->getMessage();
+    }
+}
+
+// Accion: Desinstalar CMS completo (tablas/BD + config/config.php + .htaccess)
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['action_uninstall'])) {
+    try {
+        $dropDb = isset($_POST['drop_database']);
+        if ($hasConfig) {
+            $cfg    = require BLOGCMS_CONFIG_FILE;
+            $driver = $cfg['db_driver'] ?? 'mysql';
+            $host   = $cfg['db_host'] ?? '127.0.0.1';
+            $port   = (int) ($cfg['db_port'] ?? ($driver === 'pgsql' ? 5432 : 3306));
+            $dbName = preg_replace('/[^a-zA-Z0-9_]/', '', (string) ($cfg['db_name'] ?? 'blogcms_wp'));
+            $user   = $cfg['db_user'] ?? 'root';
+            $pass   = $cfg['db_pass'] ?? '';
+
+            if ($dropDb && $dbName !== '') {
+                $adminDsn = $driver === 'pgsql'
+                    ? "pgsql:host=$host;port=$port;dbname=postgres"
+                    : "mysql:host=$host;port=$port;charset=utf8mb4";
+                $rootPdo = new PDO($adminDsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+                if ($driver === 'pgsql') {
+                    $rootPdo->exec('DROP DATABASE IF EXISTS "' . $dbName . '" WITH (FORCE)');
+                } else {
+                    $rootPdo->exec("DROP DATABASE IF EXISTS `$dbName`");
+                }
+            } elseif ($dbName !== '') {
+                $dsn = $driver === 'pgsql'
+                    ? "pgsql:host=$host;port=$port;dbname=$dbName"
+                    : "mysql:host=$host;port=$port;dbname=$dbName;charset=utf8mb4";
+                $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+                $tables = ['audit_logs','visit_logs','contact_messages','gallery_images','gallery_albums','media','themes','plugins','menus','comments','pages','post_tags','posts','tags','categories','users','options'];
+                if ($driver === 'mysql') {
+                    $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+                }
+                foreach ($tables as $t) {
+                    $pdo->exec($driver === 'pgsql' ? "DROP TABLE IF EXISTS \"$t\" CASCADE" : "DROP TABLE IF EXISTS `$t`");
+                }
+                if ($driver === 'mysql') {
+                    $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+                }
+            }
+        }
+
+        if (is_file(BLOGCMS_CONFIG_FILE)) {
+            @unlink(BLOGCMS_CONFIG_FILE);
+        }
+        if (is_file(BLOGCMS_ROOT . '/.htaccess')) {
+            @unlink(BLOGCMS_ROOT . '/.htaccess');
+        }
+        $hasConfig  = false;
+        $successMsg = 'BlogCMS fue desinstalado correctamente (tablas' . ($dropDb ? '/BD' : '') . ', config/config.php y .htaccess eliminados). Ya puedes realizar una instalacion limpia.';
+        $step       = 1;
+    } catch (Throwable $e) {
+        $errorMsg = 'Error al desinstalar: ' . $e->getMessage();
+    }
+}
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['run_install'])) {
     $step       = 2;
@@ -273,7 +395,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['run_instal
         if (@file_put_contents(BLOGCMS_CONFIG_FILE, blogcms_build_config($driver, $host, $port, $dbName, $user, $pass, $siteUrl)) === false) {
             throw new RuntimeException('No se pudo escribir config/config.php.');
         }
-        $installLog[] = 'Archivo config/config.php generado correctamente.';
+        blogcms_restore_packages();
+        blogcms_write_htaccess_file();
+        $installLog[] = 'Archivos config/config.php y .htaccess generados correctamente.';
         $step = 4;
     } catch (Throwable $e) {
         $errorMsg = $e->getMessage();
@@ -336,8 +460,25 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_POST['run_instal
     <div class="card">
         <?php if ($step === 1): ?>
             <h2 style="margin-top:0;color:#0b3b60;">Paso 1: Diagn&oacute;stico del Servidor</h2>
+            <?php if ($errorMsg !== ''): ?><div class="alert alert-err"><?php echo htmlspecialchars($errorMsg, ENT_QUOTES, 'UTF-8'); ?></div><?php endif; ?>
+            <?php if ($successMsg !== ''): ?><div class="alert alert-ok"><?php echo htmlspecialchars($successMsg, ENT_QUOTES, 'UTF-8'); ?></div><?php endif; ?>
             <?php if ($hasConfig): ?>
-                <div class="alert alert-info">Ya existe <code>config/config.php</code>. Puedes continuar para reconfigurar la base de datos o ir al <a href="<?php echo htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8'); ?>/">sitio web</a>.</div>
+                <div class="alert alert-info">
+                    <strong>Instalaci&oacute;n activa detectada (<code>config/config.php</code>):</strong> Puedes abrir el <a href="<?php echo htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8'); ?>/">sitio web</a>, continuar al Paso 2 para cambiar de motor de BD, o usar las acciones de mantenimiento:
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center;">
+                        <form method="post" action="?step=1" style="display:inline;" onsubmit="return confirm('Esto reinicializara las tablas, restaurara los 6 plugins y 4 temas desde cero. Continuar?');">
+                            <input type="hidden" name="action_reinstall" value="1">
+                            <button type="submit" class="btn" style="padding:0.5rem 1rem;font-size:0.86rem;">Reinstalar CMS desde cero</button>
+                        </form>
+                        <form method="post" action="?step=1" style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;" onsubmit="return confirm('Se eliminaran las tablas del CMS, config/config.php y .htaccess. Confirmar desinstalacion?');">
+                            <input type="hidden" name="action_uninstall" value="1">
+                            <label style="display:inline-flex;align-items:center;gap:5px;margin:0;font-weight:600;font-size:0.82rem;color:#991b1b;">
+                                <input type="checkbox" name="drop_database" value="1" style="width:auto;"> Eliminar BD completa
+                            </label>
+                            <button type="submit" class="btn" style="background:#dc2626;padding:0.5rem 1rem;font-size:0.86rem;">Desinstalar CMS</button>
+                        </form>
+                    </div>
+                </div>
             <?php endif; ?>
             <?php foreach ($reqs['items'] as $item): ?>
                 <div class="check-item">

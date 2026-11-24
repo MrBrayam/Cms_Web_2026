@@ -48,26 +48,90 @@ echo "--------------------------------------------------------"
 ENGINE_CHOICE=""
 if [ -n "${DISPLAY:-}" ] && command -v kdialog >/dev/null 2>&1; then
     ENGINE_CHOICE=$(kdialog --title "Instalador BlogCMS - Kubuntu" \
-        --radiolist "Selecciona el motor de Base de Datos o el Asistente Web:" \
+        --radiolist "Selecciona una accion o motor de Base de Datos:" \
         "web" "Abrir Asistente Web Visual en el Navegador (Recomendado)" on \
-        "mysql_local" "MySQL / MariaDB Local (3306) - [$STATUS_LOCAL]" off \
-        "mysql_xampp" "MySQL de XAMPP /opt/lampp ($XAMPP_PORT) - [$STATUS_XAMPP]" off \
-        "pgsql" "PostgreSQL (5432) - [$STATUS_PGSQL]" off 2>/dev/null || true)
+        "mysql_local" "Instalar con MySQL / MariaDB Local (3306) - [$STATUS_LOCAL]" off \
+        "mysql_xampp" "Instalar con MySQL de XAMPP /opt/lampp ($XAMPP_PORT) - [$STATUS_XAMPP]" off \
+        "pgsql" "Instalar con PostgreSQL (5432) - [$STATUS_PGSQL]" off \
+        "reinstall" "Reinstalar BlogCMS desde cero (usa config/config.php)" off \
+        "uninstall" "Desinstalar BlogCMS (borra tablas/BD y config)" off 2>/dev/null || true)
 fi
 
 if [ -z "$ENGINE_CHOICE" ]; then
     echo "Opciones:"
-    echo "  [1] MySQL / MariaDB Local (3306)"
-    echo "  [2] MySQL XAMPP ($XAMPP_PORT)"
-    echo "  [3] PostgreSQL (5432)"
+    echo "  [1] Instalar con MySQL / MariaDB Local (3306)"
+    echo "  [2] Instalar con MySQL XAMPP ($XAMPP_PORT)"
+    echo "  [3] Instalar con PostgreSQL (5432)"
     echo "  [4] Iniciar servidor web y abrir Asistente Visual (http://localhost:8080/instalador.php)"
-    read -r -p "Elige [1-4, por defecto 4]: " OPT
+    echo "  [5] Reinstalar BlogCMS desde cero (usa config/config.php actual)"
+    echo "  [6] Desinstalar BlogCMS (elimina tablas/BD, config/config.php y .htaccess)"
+    read -r -p "Elige [1-6, por defecto 4]: " OPT
     case "${OPT:-4}" in
         1) ENGINE_CHOICE="mysql_local" ;;
         2) ENGINE_CHOICE="mysql_xampp" ;;
         3) ENGINE_CHOICE="pgsql" ;;
+        5) ENGINE_CHOICE="reinstall" ;;
+        6) ENGINE_CHOICE="uninstall" ;;
         *) ENGINE_CHOICE="web" ;;
     esac
+fi
+
+if [ "$ENGINE_CHOICE" = "reinstall" ]; then
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "No existe config/config.php. Usa la opcion de instalacion normal."
+        exit 1
+    fi
+    "$PHP_BIN" -r '
+    $root = $argv[1];
+    $cfg = require "$root/config/config.php";
+    $drv = $cfg["db_driver"]; $host = $cfg["db_host"]; $port = (int)$cfg["db_port"]; $db = $cfg["db_name"];
+    $dsn = ($drv === "pgsql") ? "pgsql:host=$host;port=$port;dbname=$db" : "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
+    $pdo = new PDO($dsn, $cfg["db_user"], $cfg["db_pass"], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $sqlFile = ($drv === "pgsql") ? "$root/database/schema_pgsql.sql" : "$root/database/schema_mysql.sql";
+    $sql = preg_replace("/^\s*--.*$/m", "", file_get_contents($sqlFile));
+    foreach (array_filter(array_map("trim", explode(";\n", $sql))) as $q) { $pdo->exec($q); }
+    $pdo->prepare("UPDATE options SET option_value = ? WHERE option_name = ?")->execute([$cfg["app_url"], "site_url"]);
+    if (class_exists("ZipArchive")) {
+        foreach ([["$root/packages/plugins/*.zip", "$root/plugins"], ["$root/packages/themes/*.zip", "$root/themes"]] as [$g, $d]) {
+            foreach (glob($g) ?: [] as $zf) { $z = new ZipArchive(); if ($z->open($zf) === true) { $z->extractTo($d); $z->close(); } }
+        }
+    }
+    echo "BlogCMS reinstalado desde cero exitosamente.\n";
+    ' "$PROJECT_DIR"
+    exit 0
+fi
+
+if [ "$ENGINE_CHOICE" = "uninstall" ]; then
+    read -r -p "Confirmas desinstalar BlogCMS? (s/N): " CONF
+    if [ "$CONF" != "s" ] && [ "$CONF" != "S" ]; then
+        echo "Desinstalacion cancelada."
+        exit 0
+    fi
+    read -r -p "Eliminar tambien la base de datos completa? (s/N): " DROP_DB
+    "$PHP_BIN" -r '
+    $root = $argv[1]; $dropDb = ($argv[2] === "s" || $argv[2] === "S");
+    $cfgFile = "$root/config/config.php";
+    if (is_file($cfgFile)) {
+        $cfg = require $cfgFile;
+        $drv = $cfg["db_driver"]; $host = $cfg["db_host"]; $port = (int)$cfg["db_port"]; $db = $cfg["db_name"];
+        if ($dropDb) {
+            $dsn = ($drv === "pgsql") ? "pgsql:host=$host;port=$port;dbname=postgres" : "mysql:host=$host;port=$port;charset=utf8mb4";
+            $p = new PDO($dsn, $cfg["db_user"], $cfg["db_pass"], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            $p->exec($drv === "pgsql" ? "DROP DATABASE IF EXISTS \"$db\" WITH (FORCE)" : "DROP DATABASE IF EXISTS `$db`");
+        } else {
+            $dsn = ($drv === "pgsql") ? "pgsql:host=$host;port=$port;dbname=$db" : "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
+            $p = new PDO($dsn, $cfg["db_user"], $cfg["db_pass"], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            $tables = ["audit_logs","visit_logs","contact_messages","gallery_images","gallery_albums","media","themes","plugins","menus","comments","pages","post_tags","posts","tags","categories","users","options"];
+            if ($drv === "mysql") $p->exec("SET FOREIGN_KEY_CHECKS = 0");
+            foreach ($tables as $t) $p->exec($drv === "pgsql" ? "DROP TABLE IF EXISTS \"$t\" CASCADE" : "DROP TABLE IF EXISTS `$t`");
+            if ($drv === "mysql") $p->exec("SET FOREIGN_KEY_CHECKS = 1");
+        }
+        unlink($cfgFile);
+    }
+    if (is_file("$root/.htaccess")) unlink("$root/.htaccess");
+    echo "BlogCMS desinstalado limpiamente.\n";
+    ' "$PROJECT_DIR" "${DROP_DB:-N}"
+    exit 0
 fi
 
 if [ "$ENGINE_CHOICE" = "web" ]; then
