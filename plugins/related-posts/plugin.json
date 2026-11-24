@@ -1,0 +1,11 @@
+{
+  "slug": "related-posts",
+  "name": "Posts Relacionados por Etiquetas",
+  "version": "1.0.0",
+  "description": "Muestra articulos relacionados automaticamente segun etiquetas compartidas.",
+  "author": "Grupo 1 UNSM",
+  "entry": "plugin.php",
+  "default_settings": {
+    "limit": 3
+  }
+}

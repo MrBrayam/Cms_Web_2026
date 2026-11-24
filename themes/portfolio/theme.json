@@ -1,0 +1,7 @@
+{
+  "slug": "portfolio",
+  "name": "Portfolio",
+  "version": "1.0.0",
+  "description": "Grilla de proyectos con filtro por categoria y efecto hover interactivo.",
+  "author": "Grupo 1 UNSM"
+}

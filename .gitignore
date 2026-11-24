@@ -1,11 +1,7 @@
-# Credenciales locales y archivos de entorno
-wp-config.php
+# Configuracion local generada por instalador
+config/config.php
 .htaccess
 
-# Logs y archivos temporales
+# Logs y temporales
 *.log
-wp-content/debug.log
-wp-content/cache/
-
-# Evitar duplicar zips de plugins ya extraidos en wp-content/plugins/
-entregables-zip/plugins/
+/cache/

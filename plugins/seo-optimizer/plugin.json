@@ -1,0 +1,12 @@
+{
+  "slug": "seo-optimizer",
+  "name": "SEO Optimizer",
+  "version": "1.0.0",
+  "description": "Genera meta tags SEO, OpenGraph y sitemap XML automatico en /sitemap.xml.",
+  "author": "Grupo 1 UNSM",
+  "entry": "plugin.php",
+  "default_settings": {
+    "default_robots": "index, follow",
+    "include_pages": true
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "slug": "image-gallery",
+  "name": "Galeria de Imagenes con Albumes",
+  "version": "1.0.0",
+  "description": "Gestiona albumes y galerias fotograficas mediante el shortcode [galeria].",
+  "author": "Grupo 1 UNSM",
+  "entry": "plugin.php",
+  "default_settings": {
+    "columns": 3
+  }
+}

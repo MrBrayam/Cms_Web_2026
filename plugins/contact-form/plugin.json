@@ -1,0 +1,12 @@
+{
+  "slug": "contact-form",
+  "name": "Formulario de Contacto Personalizable",
+  "version": "1.0.0",
+  "description": "Formulario configurable con campos personalizables y bandeja de mensajes via [contacto].",
+  "author": "Grupo 1 UNSM",
+  "entry": "plugin.php",
+  "default_settings": {
+    "fields": ["name", "email", "subject", "message"],
+    "success_msg": "Gracias por tu mensaje. Te responderemos pronto."
+  }
+}

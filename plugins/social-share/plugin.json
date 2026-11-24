@@ -1,0 +1,11 @@
+{
+  "slug": "social-share",
+  "name": "Botones de Compartir en Redes Sociales",
+  "version": "1.0.0",
+  "description": "Agrega botones de compartir (WhatsApp, X, Facebook, LinkedIn y copiar enlace) al final de cada articulo.",
+  "author": "Grupo 1 UNSM",
+  "entry": "plugin.php",
+  "default_settings": {
+    "networks": ["whatsapp", "facebook", "x", "linkedin", "copy"]
+  }
+}

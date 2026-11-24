@@ -1,0 +1,47 @@
+:root {
+    --pf-bg: #0f172a;
+    --pf-surface: #1e293b;
+    --pf-text: #e2e8f0;
+    --pf-muted: #94a3b8;
+    --pf-accent: #6366f1;
+    --pf-cyan: #06b6d4;
+    --pf-border: rgba(148, 163, 184, 0.2);
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--pf-bg); color: var(--pf-text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.65; }
+a { color: #818cf8; text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { max-width: 100%; height: auto; display: block; }
+.pf-container { max-width: 1200px; margin: 0 auto; padding: 0 1.25rem; }
+.pf-header { border-bottom: 1px solid var(--pf-border); background: rgba(15, 23, 42, 0.94); position: sticky; top: 0; z-index: 40; padding: 1rem 0; }
+.pf-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.pf-brand { font-size: 1.45rem; font-weight: 800; color: #fff; }
+.pf-brand span { color: var(--pf-cyan); }
+.pf-brand:hover { text-decoration: none; }
+.pf-nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 1.35rem; flex-wrap: wrap; }
+.pf-nav a { color: var(--pf-text); font-weight: 500; font-size: 0.94rem; }
+.pf-nav a:hover { color: var(--pf-cyan); text-decoration: none; }
+.pf-main { padding: 2.5rem 0 4rem; }
+.pf-filters { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2rem; }
+.pf-filter-btn { background: var(--pf-surface); color: var(--pf-text); border: 1px solid var(--pf-border); padding: 0.45rem 1rem; border-radius: 999px; cursor: pointer; font-size: 0.88rem; font-weight: 600; }
+.pf-filter-btn:hover, .pf-filter-btn.is-active { background: var(--pf-accent); border-color: var(--pf-accent); color: #fff; }
+.pf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+.pf-card { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; background: #1e293b; border: 1px solid var(--pf-border); box-shadow: 0 12px 28px rgba(0,0,0,0.28); }
+.pf-card.is-hidden { display: none; }
+.pf-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+.pf-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(15,23,42,0.18) 0%, rgba(15,23,42,0.94) 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 1.4rem; opacity: 0; transform: translateY(10px); transition: opacity 0.28s, transform 0.28s; }
+.pf-card:hover img, .pf-card:focus-within img { transform: scale(1.08); }
+.pf-card:hover .pf-overlay, .pf-card:focus-within .pf-overlay { opacity: 1; transform: translateY(0); }
+.pf-card-ribbon { position: absolute; left: 1rem; bottom: 1rem; background: rgba(15,23,42,0.82); color: #f8fafc; padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.88rem; font-weight: 600; transition: opacity 0.2s; }
+.pf-card:hover .pf-card-ribbon { opacity: 0; }
+.pf-btn { display: inline-block; width: fit-content; background: var(--pf-accent); color: #fff; border: none; padding: 0.48rem 1rem; border-radius: 6px; font-size: 0.86rem; font-weight: 600; cursor: pointer; }
+.pf-article-wrap { max-width: 860px; margin: 0 auto; background: var(--pf-surface); border: 1px solid var(--pf-border); border-radius: 14px; padding: 2.2rem; }
+.pf-form-row { margin-bottom: 0.85rem; }
+.pf-form-row label { display: block; font-size: 0.88rem; font-weight: 600; margin-bottom: 0.25rem; }
+.pf-form-row input, .pf-form-row textarea { width: 100%; padding: 0.6rem; border: 1px solid var(--pf-border); border-radius: 6px; background: var(--pf-bg); color: #fff; font-family: inherit; }
+.pf-flash { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; }
+.pf-flash-ok { background: #064e3b; color: #a7f3d0; }
+.pf-flash-err { background: #7f1d1d; color: #fecaca; }
+.pf-footer { border-top: 1px solid var(--pf-border); padding: 2rem 0; color: var(--pf-muted); font-size: 0.88rem; }
+.pf-footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+@media (max-width: 640px) { .pf-grid { grid-template-columns: 1fr; } }

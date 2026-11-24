@@ -1,0 +1,11 @@
+{
+  "slug": "visit-counter",
+  "name": "Contador de Visitas y Estadisticas",
+  "version": "1.0.0",
+  "description": "Registra visitas unicas por sesion y muestra estadisticas detalladas en el panel.",
+  "author": "Grupo 1 UNSM",
+  "entry": "plugin.php",
+  "default_settings": {
+    "show_badge": true
+  }
+}
